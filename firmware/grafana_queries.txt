@@ -1,0 +1,45 @@
+=== PANEL 1 : Température (Gauge) ===
+from(bucket: "sensors")
+  |> range(start: -1h)
+  |> filter(fn: (r) => r._measurement == "environment" and r._field == "temp")
+  |> last()
+
+=== PANEL 2 : Humidité (Gauge) ===
+from(bucket: "sensors")
+  |> range(start: -1h)
+  |> filter(fn: (r) => r._measurement == "environment" and r._field == "hum")
+  |> last()
+
+=== PANEL 3 : CO2 (Gauge avec seuils) ===
+from(bucket: "sensors")
+  |> range(start: -1h)
+  |> filter(fn: (r) => r._measurement == "environment" and r._field == "co2")
+  |> last()
+
+=== PANEL 4 : Luminosité (Gauge) ===
+from(bucket: "sensors")
+  |> range(start: -1h)
+  |> filter(fn: (r) => r._measurement == "environment" and r._field == "lux")
+  |> last()
+
+=== PANEL 5 : Historique CO2 - 24h (Time Series) ===
+from(bucket: "sensors")
+  |> range(start: -24h)
+  |> filter(fn: (r) => r._measurement == "environment" and r._field == "co2")
+  |> aggregateWindow(every: 5m, fn: mean, createEmpty: false)
+  |> yield(name: "co2_mean")
+
+=== PANEL 6 : Historique Température - 24h ===
+from(bucket: "sensors")
+  |> range(start: -24h)
+  |> filter(fn: (r) => r._measurement == "environment" and r._field == "temp")
+  |> aggregateWindow(every: 5m, fn: mean, createEmpty: false)
+  |> yield(name: "temp_mean")
+
+=== PANEL 7 : Taux d'occupation par heure ===
+from(bucket: "sensors")
+  |> range(start: -24h)
+  |> filter(fn: (r) => r._measurement == "environment" and r._field == "pres")
+  |> aggregateWindow(every: 1h, fn: sum, createEmpty: false)
+  |> map(fn: (r) => ({ r with _value: r._value * 100.0 / 120.0 }))
+  |> yield(name: "occupation_rate")
